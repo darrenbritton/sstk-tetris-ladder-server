@@ -4,7 +4,8 @@
   "description": "digicah online server",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon index.js",
+    "start": "node index.js",
+    "start:dev": "nodemon index.js",
     "start:docker": "docker-compose up",
     "test": "mocha */tests/*.test.js",
     "lint": "eslint *.js models/*.js",
