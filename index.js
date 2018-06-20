@@ -49,8 +49,9 @@ passport.use(new GoogleStrategy({
 }));
 
 // config
-const domainRoot = 'localhost';
+const domainRoot = process.env.APP_SECRET ? 'sstk-tetris-ladder.surge.sh' : 'localhost:3000';
 const mongoUri = process.env.MONGODB_URI || 'mongodb://mongo:27017/tetris';
+const port  = process.env.PORT || 8080;
 
 //
 // Connect to MongoDb
@@ -70,16 +71,16 @@ const secret = Secrets.appSecret || Math.random().toString(36);
 const cookies = cookieParser(secret);
 
 /* redis */
-const host = process.env.REDIS_URL || process.env.REDIS_HOST || '127.0.0.1';
-const port = 6379;
-const client = redis.createClient(port, host);
+const rHost = process.env.REDIS_URL || process.env.REDIS_HOST || '127.0.0.1';
+const rPort = 6379;
+const client = process.env.REDIS_URL ? redis.createClient(rHost) : redis.createClient(rPort, rHost);
 const store = new RedisStore({
   client,
   ttl: 15768000,
 });
 
 client.on('connect', () => {
-  console.log(`redis connected - ${host}:${port}`);
+  console.log(`redis connected - ${rHost}:${rPort}`);
 });
 
 //
@@ -115,7 +116,7 @@ app.get(
   '/auth/google/callback',
   passport.authenticate('google'),
   (req, res) => {
-    res.redirect(`//${domainRoot}:3000/play`);
+    res.redirect(`//${domainRoot}/leaderboard`);
   },
 );
 
@@ -130,7 +131,7 @@ app.get('/', (req, res) => {
 
 app.get('/logout', (req, res) => {
   req.logout();
-  res.redirect(`//${domainRoot}:3000`);
+  res.redirect(`//${domainRoot}`);
 });
 
 function ensureAuthenticated(req, res, next) {
@@ -163,7 +164,6 @@ primus.use('session', primusSession, {
 });
 
 primus.on('connection', async (spark) => {
-  console.log(spark.request.session.passport.user);
   if (spark.request.session.passport && spark.request.session.passport.user) {
     const {
       user,
@@ -236,6 +236,6 @@ async function getLeaderboard() {
 //
 // Begin accepting connections.
 //
-server.listen(8080, () => {
-  console.log('Open http://localhost:8080 in your browser');
+server.listen(port, () => {
+  console.log(`Open ${domainRoot}:${port} in your browser`);
 });
