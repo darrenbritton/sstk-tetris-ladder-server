@@ -1,0 +1,53 @@
+{
+  "name": "digicah-server",
+  "version": "1.0.0",
+  "description": "digicah online server",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon index.js",
+    "start:docker": "docker-compose up",
+    "test": "mocha */tests/*.test.js",
+    "lint": "eslint *.js models/*.js",
+    "lint:fix": "eslint *.js models/*.js --fix"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/darrenbritton/digicah-server.git"
+  },
+  "author": "Darren Britton",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/darrenbritton/digicah-server/issues"
+  },
+  "homepage": "https://github.com/darrenbritton/digicah-server#readme",
+  "dependencies": {
+    "connect-redis": "^3.3.3",
+    "cookie-parser": "^1.0.1",
+    "delay": "^3.0.0",
+    "elo-rank": "^1.0.3",
+    "express": "^4.1.1",
+    "express-session": "^1.0.4",
+    "jsonfile": "^4.0.0",
+    "mongoose": "^5.1.6",
+    "passport": "^0.4.0",
+    "passport-google-oauth20": "^1.0.0",
+    "primus": "^7.2.0",
+    "redis": "^2.8.0",
+    "timeout-then": "^1.1.0",
+    "uuid": "^3.2.1",
+    "ws": "^5.1.1"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.0.0-beta.49",
+    "@babel/node": "^7.0.0-beta.49",
+    "babel-plugin-transform-object-rest-spread": "^6.26.0",
+    "babel-preset-env": "^1.7.0",
+    "chai": "^4.1.2",
+    "eslint": "^4.19.1",
+    "eslint-config-airbnb-base": "^12.1.0",
+    "eslint-config-google": "^0.9.1",
+    "eslint-plugin-import": "^2.12.0",
+    "mocha": "^5.2.0",
+    "nodemon": "^1.17.4"
+  }
+}
