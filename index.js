@@ -27,7 +27,10 @@ try {
   };
 }
 
+
+// mongoose models
 const User = require('./models/User');
+const Challenge = require('./models/Challenge');
 
 passport.use(new GoogleStrategy({
   clientID: Secrets.google.id,
@@ -172,6 +175,10 @@ primus.on('connection', async (spark) => {
       action: 'persist.player',
       payload: user,
     });
+    spark.write({
+      action: 'persist.challenges',
+      payload: await getChallenges(user.id),
+    });
     primus.write({
       action: 'persist.leaderboard',
       payload: await getLeaderboard(),
@@ -191,13 +198,33 @@ primus.on('connection', async (spark) => {
         case 'notify.generic':
           primus.write({
             action: event.type,
-            payload: event.payload,
+            payload: payload,
           });
           break;
-        case 'player.joinGame':
-          const game = Games.find((game) => game.id === payload.id);
-          if (game) {
-            game.join(player);
+        case 'player.challenge':
+          if (payload.opponent === user.id) {
+            spark.write({
+              action: 'notify.generic',
+              payload: {text: `You can't challenge yourself!`},
+            });
+          } else {
+            const opponent = await findUser(payload.opponent);
+            if (opponent) {
+              const challenge = new Challenge({
+                challenger: user.id,
+                opponent: opponent._id,
+              });
+              challenge.save();
+              spark.write({
+                action: 'notify.generic',
+                payload: {text: `${opponent.username} has been sent your challenge!`},
+              });
+            } else {
+              spark.write({
+                action: 'notify.generic',
+                payload: {text: `this opponent no longer exists!`},
+              });
+            }
           }
           break;
         case 'game.create':
@@ -231,6 +258,37 @@ async function getLeaderboard() {
     .find()
     .sort({ranking: -1})
     .exec();
+}
+
+async function findUser(id) {
+  return await User
+    .findById(id)
+    .exec();
+}
+
+async function getChallenges(id) {
+  const received = await Challenge
+    .find({opponent: id})
+    .lean()
+    .exec();
+  const sent = await Challenge
+    .find({challenger: id})
+    .lean()
+    .exec();
+  const recievedMapped = received.map(async (challenge) => {
+    const challenger = await findUser(challenge.challenger);
+    return {...challenge, challenger};
+  });
+  const sentMapped = sent.map(async (challenge) => {
+    const opponent = await findUser(challenge.opponent);
+    return {...challenge, opponent};
+  });
+  return Promise.all([
+    Promise.all(recievedMapped),
+    Promise.all(sentMapped),
+  ]).then((complete) => (
+    {received: complete[0], sent: complete[1]}
+  ));
 }
 
 //
