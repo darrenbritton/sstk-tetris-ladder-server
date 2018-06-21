@@ -52,7 +52,7 @@ passport.use(new GoogleStrategy({
 }));
 
 // config
-const domainRoot = process.env.APP_SECRET ? 'sstk-tetris-ladder.surge.sh' : 'localhost:3000';
+const domainRoot = process.env.APP_SECRET ? 'sstk-tetris.netlify.com' : 'localhost:3000';
 const mongoUri = process.env.MONGODB_URI || 'mongodb://mongo:27017/tetris';
 const port  = process.env.PORT || 8080;
 
