@@ -54,7 +54,7 @@ passport.use(new GoogleStrategy({
 // config
 const domainRoot = process.env.APP_SECRET ? 'sstk-tetris.netlify.com' : 'localhost:3000';
 const mongoUri = process.env.MONGODB_URI || 'mongodb://mongo:27017/tetris';
-const port  = process.env.PORT || 8080;
+const port = process.env.PORT || 8080;
 
 //
 // Connect to MongoDb
@@ -155,6 +155,7 @@ app.get('/protected', ensureAuthenticated, (req, res) => {
 //
 const server = http.createServer(app);
 const primus = new Primus(server);
+const sparkMap = {};
 
 //
 // Here we add the `cookie-parser` middleware and our session middleware. The
@@ -171,6 +172,7 @@ primus.on('connection', async (spark) => {
     const {
       user,
     } = spark.request.session.passport;
+    sparkMap[user.id] = spark;
     spark.write({
       action: 'persist.player',
       payload: user,
@@ -219,6 +221,17 @@ primus.on('connection', async (spark) => {
                 action: 'notify.generic',
                 payload: {text: `${opponent.username} has been sent your challenge!`},
               });
+              primus.write({
+                action: 'persist.challenges',
+                payload: await getChallenges(user.id),
+              });
+              if (sparkMap[opponent._id]) {
+                console.log(user);
+                sparkMap[opponent._id].write({
+                  action: 'notify.generic',
+                  payload: {text: `${user.displayName} has sent you a challenge!`},
+                })
+              }
             } else {
               spark.write({
                 action: 'notify.generic',
