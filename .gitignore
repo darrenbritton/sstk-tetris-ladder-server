@@ -61,7 +61,7 @@ typings/
 .next
 
 # custom
-.secrets.js
+.secrets.json
 .idea/
 redis-data/
 mongo-data/

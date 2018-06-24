@@ -1,26 +1,29 @@
 {
-  "name": "digicah-server",
+  "name": "sstk-tetris-lader-server",
   "version": "1.0.0",
-  "description": "digicah online server",
+  "description": "server for sstk-tetris",
   "main": "index.js",
+  "engines": {
+    "node": "10.5.0"
+  },
   "scripts": {
-    "start": "node index.js",
-    "start:dev": "nodemon index.js",
+    "start": "node --experimental-modules index.mjs",
+    "start:dev": "nodemon --exec node --experimental-modules index.mjs",
     "start:docker": "docker-compose up",
     "test": "mocha */tests/*.test.js",
     "lint": "eslint *.js models/*.js",
-    "lint:fix": "eslint *.js models/*.js --fix"
+    "lint:fix": "eslint *.mjs models/*.mjs services/*.mjs --fix"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/darrenbritton/digicah-server.git"
+    "url": "git+https://github.com/darrenbritton/sstk-tetris-lader-server.git"
   },
   "author": "Darren Britton",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/darrenbritton/digicah-server/issues"
+    "url": "https://github.com/darrenbritton/sstk-tetris-lader-server/issues"
   },
-  "homepage": "https://github.com/darrenbritton/digicah-server#readme",
+  "homepage": "https://github.com/darrenbritton/sstk-tetris-lader-server#readme",
   "dependencies": {
     "connect-redis": "^3.3.3",
     "cookie-parser": "^1.0.1",
@@ -29,7 +32,7 @@
     "express": "^4.1.1",
     "express-session": "^1.0.4",
     "jsonfile": "^4.0.0",
-    "mongoose": "^5.1.6",
+    "mongoose": "5.0.15",
     "passport": "^0.4.0",
     "passport-google-oauth20": "^1.0.0",
     "primus": "^7.2.0",

@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const Schema = mongoose.Schema;
 
@@ -10,4 +10,4 @@ const challengeSchema = new Schema({
 
 const Challenge = mongoose.model('Challenge', challengeSchema);
 
-module.exports = Challenge;
+export default Challenge;
