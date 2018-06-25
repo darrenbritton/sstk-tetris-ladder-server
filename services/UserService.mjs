@@ -35,8 +35,8 @@ class UserService {
     const loser = await UserService.find(loserId);
     const winnerRank = elo.updateRating(elo.getExpected(winner.rank, loser.rank), 1, winner.rank);
     const loserRank = elo.updateRating(elo.getExpected(loser.rank, winner.rank), 0, loser.rank);
-    await UserService.update(winnerId, {rank: winnerRank});
-    return await UserService.update(loserId, {rank: loserRank});
+    await UserService.update(winnerId, {rank: winnerRank, gamesPlayed: winner.gamesPlayed + 1});
+    return await UserService.update(loserId, {rank: loserRank, gamesPlayed: loser.gamesPlayed + 1});
   }
 }
 
