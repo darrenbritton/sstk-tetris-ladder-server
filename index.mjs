@@ -191,11 +191,19 @@ primus.on('connection', async (spark) => {
       action: 'persist.games',
       payload: await GameService.getView(),
     });
+    const game = await GameService.playerGameInProgress(user.id);
+    if (game) {
+      primus.write({
+        action: 'persist.playing',
+        payload: game,
+      });
+    }
     spark.on('data', async (event) => {
       const {
         payload,
       } = event;
       let challenge;
+      let game;
       console.log(event.type);
       switch (event.type) {
         case 'leaderboard.get':
@@ -215,10 +223,14 @@ primus.on('connection', async (spark) => {
             spark.write(NotificationService.generate(`You can't challenge yourself!`));
           } else {
             const opponent = await UserService.find(payload.opponent);
-            if (opponent) {
-              ChallengeService.create({
+            if (opponent) { // issue here somewhere
+              await ChallengeService.create({
                 challenger: user.id,
                 opponent: opponent._id,
+              });
+              spark.write({
+                action: 'persist.challenges',
+                payload: await ChallengeService.getAllByUserId(user.id),
               });
               spark.write(NotificationService.generate(`${opponent.username} has been sent your challenge!`));
               if (sparkMap[opponent._id]) {
@@ -238,11 +250,11 @@ primus.on('connection', async (spark) => {
           if (challenge !== null) {
             const {challenger, opponent} = challenge;
             if (opponent === user.id) {
-              GameService.create({
+              await GameService.create({
                 challenger,
                 opponent,
               });
-              ChallengeService.delete(payload.id);
+              await ChallengeService.delete(payload.id);
               spark.write(NotificationService.generate(`Challenge Accepted!`));
               if (sparkMap[challenger]) {
                 sparkMap[challenger].write(NotificationService.generate(`${user.displayName} has accepted your challenge!`));
@@ -271,7 +283,7 @@ primus.on('connection', async (spark) => {
           if (challenge !== null) {
             const {challenger, opponent} = challenge;
             if (opponent === user.id) {
-              ChallengeService.delete(payload.id);
+              await ChallengeService.delete(payload.id);
               spark.write(NotificationService.generate(`Challenge Rejected!`));
               if (sparkMap[challenger]) {
                 sparkMap[challenger].write(NotificationService.generate(`${user.displayName} has rejected your challenge!`));
@@ -294,6 +306,226 @@ primus.on('connection', async (spark) => {
             action: 'persist.challenges',
             payload: await ChallengeService.getAllByUserId(user.id),
           });
+          break;
+        case 'game.initiate':
+          game = await GameService.find(payload.id);
+          let closeDialog = false;
+          if (game !== null) {
+            const {challenger, opponent} = game;
+            const otherPlayer = challenger === user.id ? opponent : opponent === user.id ? challenger : null;
+            if (otherPlayer) {
+              if (sparkMap[otherPlayer]) {
+                sparkMap[otherPlayer].write({
+                  action: 'display.gamePrompt',
+                  payload: game,
+                });
+              } else {
+                spark.write(NotificationService.generate(`your opponent must be online to start a game!`));
+                closeDialog = true;
+              }
+            } else {
+              spark.write(NotificationService.generate(`you can only initiate games you are involved in!`));
+              closeDialog = true;
+            }
+          } else {
+            spark.write(NotificationService.generate(`this game no longer exists!`));
+            closeDialog = true;
+          }
+          if (closeDialog) {
+            spark.write({
+              action: 'display.togglePlayDialog',
+              payload: {},
+            });
+          }
+          primus.write({
+            action: 'persist.games',
+            payload: await GameService.getView(),
+          });
+          break;
+        case 'game.accept':
+          game = await GameService.find(payload.id);
+          if (game !== null) {
+            const {challenger, opponent} = game;
+            const otherPlayer = challenger === user.id ? opponent : opponent === user.id ? challenger : null;
+            if (otherPlayer) {
+              if (sparkMap[otherPlayer]) {
+                game = await GameService.update(payload.id, {inProgress: true});
+                sparkMap[otherPlayer].write({
+                  action: 'persist.playing',
+                  payload: game,
+                });
+                spark.write({
+                  action: 'persist.playing',
+                  payload: game,
+                });
+              }
+            } else {
+              spark.write(NotificationService.generate(`you can only accept games you are involved in!`));
+            }
+          } else {
+            spark.write(NotificationService.generate(`this game no longer exists!`));
+          }
+          primus.write({
+            action: 'persist.games',
+            payload: await GameService.getView(),
+          });
+          break;
+        case 'game.reject':
+          game = await GameService.find(payload.id);
+          if (game !== null) {
+            const {challenger, opponent} = game;
+            const otherPlayer = challenger === user.id ? opponent : opponent === user.id ? challenger : null;
+            if (otherPlayer) {
+              if (sparkMap[otherPlayer]) {
+                sparkMap[otherPlayer].write({
+                  action: 'persist.playing',
+                  payload: {},
+                });
+                sparkMap[otherPlayer].write({
+                  action: 'display.togglePlayDialog',
+                  payload: {},
+                });
+                sparkMap[otherPlayer].write({
+                  action: 'notify.generic',
+                  payload: { text: `${user.displayName} has rejected your request to start a game` },
+                });
+                spark.write({
+                  action: 'persist.playing',
+                  payload: {},
+                });
+              }
+            } else {
+              spark.write(NotificationService.generate(`you can only reject games you are involved in!`));
+            }
+          } else {
+            spark.write(NotificationService.generate(`this game no longer exists!`));
+          }
+          break;
+        case 'game.win':
+          game = await GameService.find(payload.id);
+          if (game !== null) {
+            const {challenger, opponent} = game;
+            const otherPlayer = challenger === user.id ? opponent : opponent === user.id ? challenger : null;
+            if (otherPlayer) {
+              if (sparkMap[otherPlayer]) {
+                game = await GameService.update(payload.id, {winner: user.id});
+                sparkMap[otherPlayer].write({
+                  action: 'persist.playing',
+                  payload: {...game._doc, confirm: true},
+                });
+                spark.write({
+                  action: 'persist.playing',
+                  payload: game,
+                });
+              } else {
+                spark.write(NotificationService.generate(`you can't declare yourself the winner while the other play is offline!`));
+              }
+            } else {
+              spark.write(NotificationService.generate(`you can only win games you are involved in!`));
+            }
+          } else {
+            spark.write(NotificationService.generate(`this game no longer exists!`));
+          }
+          break;
+        case 'game.lose':
+          game = await GameService.find(payload.id);
+          if (game !== null) {
+            const {challenger, opponent} = game;
+            const otherPlayer = challenger === user.id ? opponent : opponent === user.id ? challenger : null;
+            if (otherPlayer) {
+              if (sparkMap[otherPlayer]) {
+                game = await GameService.update(payload.id, {winner: otherPlayer});
+                sparkMap[otherPlayer].write({
+                  action: 'persist.playing',
+                  payload: {...game._doc, confirm: true},
+                });
+                spark.write({
+                  action: 'persist.playing',
+                  payload: game,
+                });
+              } else {
+                spark.write(NotificationService.generate(`you can't declare yourself the loser while the other play is offline!`));
+              }
+            } else {
+              spark.write(NotificationService.generate(`you can only lose games you are involved in!`));
+            }
+          } else {
+            spark.write(NotificationService.generate(`this game no longer exists!`));
+          }
+          break;
+        case 'game.confirm':
+          game = await GameService.find(payload.id);
+          if (game !== null) {
+            const {challenger, opponent} = game;
+            const otherPlayer = challenger === user.id ? opponent : opponent === user.id ? challenger : null;
+            if (otherPlayer) {
+              if (sparkMap[otherPlayer]) {
+                game = await GameService.update(payload.id, {played: true, inProgress: false});
+                const loser = game.winner === otherPlayer ? user.id : otherPlayer;
+                await UserService.updateRankings(game.winner, loser);
+                sparkMap[otherPlayer].write({
+                  action: 'persist.playing',
+                  payload: {},
+                });
+                spark.write({
+                  action: 'persist.playing',
+                  payload: {},
+                });
+                sparkMap[otherPlayer].write({
+                  action: 'display.togglePlayDialog',
+                  payload: {},
+                });
+                sparkMap[game.winner].write({
+                  action: 'notify.generic',
+                  payload: {text: 'You Won! your leaderboard ranking has been updated'},
+                });
+                sparkMap[loser].write({
+                  action: 'notify.generic',
+                  payload: {text: 'You Lost! your leaderboard ranking has been updated'},
+                });
+                primus.write({
+                  action: 'persist.leaderboard',
+                  payload: await UserService.getLeaderboard(),
+                });
+              } else {
+                spark.write(NotificationService.generate(`you can't confirm the result while the other play is offline!`));
+              }
+            } else {
+              spark.write(NotificationService.generate(`you can only confirm games you are involved in!`));
+            }
+          } else {
+            spark.write(NotificationService.generate(`this game no longer exists!`));
+          }
+          break;
+        case 'game.contest':
+          game = await GameService.find(payload.id);
+          if (game !== null) {
+            const {challenger, opponent} = game;
+            const otherPlayer = challenger === user.id ? opponent : opponent === user.id ? challenger : null;
+            if (otherPlayer) {
+              if (sparkMap[otherPlayer]) {
+                game = await GameService.update(payload.id, {played: true, contested: true, inProgress: false});
+                sparkMap[otherPlayer].write({
+                  action: 'persist.playing',
+                  payload: game,
+                });
+                sparkMap[otherPlayer].write({
+                  action: 'display.togglePlayDialog',
+                  payload: {},
+                });
+                spark.write({
+                  action: 'persist.playing',
+                  payload: game,
+                });
+              } else {
+                spark.write(NotificationService.generate(`you can't contest the result while the other play is offline!`));
+              }
+            } else {
+              spark.write(NotificationService.generate(`you can only contest games you are involved in!`));
+            }
+          } else {
+            spark.write(NotificationService.generate(`this game no longer exists!`));
+          }
           break;
       }
     });

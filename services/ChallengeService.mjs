@@ -5,7 +5,7 @@ import User from '../models/User';
 class ChallengeService {
   static async create(obj) {
     const challenge = new Challenge(obj);
-    challenge.save();
+    await challenge.save();
   }
 
   static async find(id) {
