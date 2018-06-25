@@ -387,7 +387,7 @@ primus.on('connection', async (spark) => {
                 });
                 sparkMap[otherPlayer].write({
                   action: 'notify.generic',
-                  payload: { text: `${user.displayName} has rejected your request to start a game` },
+                  payload: {text: `${user.displayName} has rejected your request to start a game`},
                 });
                 spark.write({
                   action: 'persist.playing',

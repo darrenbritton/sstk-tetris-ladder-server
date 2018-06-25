@@ -1,7 +1,5 @@
 import User from '../models/User.mjs';
 import EloRank from 'elo-rank';
-import GameService from "./GameService";
-import Game from "../models/Game";
 
 const elo = new EloRank();
 
