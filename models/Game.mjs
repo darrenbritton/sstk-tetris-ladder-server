@@ -9,6 +9,7 @@ const gameSchema = new Schema({
   inProgress: {type: Boolean, default: false},
   winner: String,
   contested: {type: Boolean, default: false},
+  waitingForConfirmationFrom: String,
   created_at: {type: Date, default: Date.now()},
   played_at: Date,
 });

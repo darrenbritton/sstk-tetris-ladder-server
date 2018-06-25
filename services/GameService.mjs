@@ -13,24 +13,23 @@ class GameService {
   }
 
   static async update(id, obj) {
-    await Game
-      .findByIdAndUpdate(id, {$set: obj})
+    return await Game
+      .findByIdAndUpdate(id, {$set: obj}, {new: true})
       .exec();
-    return GameService.find(id);
   }
 
   static async getPending() {
     return await Game
       .find({played: false})
-      .sort({createdAt: 1})
+      .sort({created_at: -1})
       .exec();
   }
 
   static async getRecentResults() {
     return await Game
       .find({played: true})
-      .sort({createdAt: 1})
       .limit(10)
+      .sort({created_at: -1})
       .exec();
   }
 

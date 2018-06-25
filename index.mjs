@@ -197,6 +197,10 @@ primus.on('connection', async (spark) => {
         action: 'persist.playing',
         payload: game,
       });
+      spark.write({
+        action: 'display.togglePlayDialog',
+        payload: {},
+      });
     }
     spark.on('data', async (event) => {
       const {
@@ -232,9 +236,9 @@ primus.on('connection', async (spark) => {
                 action: 'persist.challenges',
                 payload: await ChallengeService.getAllByUserId(user.id),
               });
-              spark.write(NotificationService.generate(`${opponent.username} has been sent your challenge!`));
+              spark.write(NotificationService.generate(`${opponent.username} has been sent your challenge!`, 'challenge.view', 'view'));
               if (sparkMap[opponent._id]) {
-                sparkMap[opponent._id].write(NotificationService.generate(`${user.displayName} has sent you a challenge!`));
+                sparkMap[opponent._id].write(NotificationService.generate(`${user.displayName} has sent you a challenge!`, 'challenge.view', 'view'));
                 sparkMap[opponent._id].write({
                   action: 'persist.challenges',
                   payload: await ChallengeService.getAllByUserId(opponent._id),
@@ -255,9 +259,9 @@ primus.on('connection', async (spark) => {
                 opponent,
               });
               await ChallengeService.delete(payload.id);
-              spark.write(NotificationService.generate(`Challenge Accepted!`));
+              spark.write(NotificationService.generate(`Challenge Accepted!`, 'game.view', 'view'));
               if (sparkMap[challenger]) {
-                sparkMap[challenger].write(NotificationService.generate(`${user.displayName} has accepted your challenge!`));
+                sparkMap[challenger].write(NotificationService.generate(`${user.displayName} has accepted your challenge!`, 'game.view', 'view'));
                 sparkMap[challenger].write({
                   action: 'persist.challenges',
                   payload: await ChallengeService.getAllByUserId(challenger),
@@ -408,10 +412,10 @@ primus.on('connection', async (spark) => {
             const otherPlayer = challenger === user.id ? opponent : opponent === user.id ? challenger : null;
             if (otherPlayer) {
               if (sparkMap[otherPlayer]) {
-                game = await GameService.update(payload.id, {winner: user.id});
+                game = await GameService.update(payload.id, {winner: user.id, waitingForConfirmationFrom: otherPlayer});
                 sparkMap[otherPlayer].write({
                   action: 'persist.playing',
-                  payload: {...game._doc, confirm: true},
+                  payload: {...game._doc},
                 });
                 spark.write({
                   action: 'persist.playing',
@@ -434,10 +438,10 @@ primus.on('connection', async (spark) => {
             const otherPlayer = challenger === user.id ? opponent : opponent === user.id ? challenger : null;
             if (otherPlayer) {
               if (sparkMap[otherPlayer]) {
-                game = await GameService.update(payload.id, {winner: otherPlayer});
+                game = await GameService.update(payload.id, {winner: otherPlayer, waitingForConfirmationFrom: otherPlayer});
                 sparkMap[otherPlayer].write({
                   action: 'persist.playing',
-                  payload: {...game._doc, confirm: true},
+                  payload: {...game._doc},
                 });
                 spark.write({
                   action: 'persist.playing',
@@ -460,7 +464,7 @@ primus.on('connection', async (spark) => {
             const otherPlayer = challenger === user.id ? opponent : opponent === user.id ? challenger : null;
             if (otherPlayer) {
               if (sparkMap[otherPlayer]) {
-                game = await GameService.update(payload.id, {played: true, inProgress: false});
+                game = await GameService.update(payload.id, {played: true, inProgress: false, waitingForConfirmationFrom: ''});
                 const loser = game.winner === otherPlayer ? user.id : otherPlayer;
                 await UserService.updateRankings(game.winner, loser);
                 sparkMap[otherPlayer].write({
@@ -475,17 +479,15 @@ primus.on('connection', async (spark) => {
                   action: 'display.togglePlayDialog',
                   payload: {},
                 });
-                sparkMap[game.winner].write({
-                  action: 'notify.generic',
-                  payload: {text: 'You Won! your leaderboard ranking has been updated'},
-                });
-                sparkMap[loser].write({
-                  action: 'notify.generic',
-                  payload: {text: 'You Lost! your leaderboard ranking has been updated'},
-                });
+                sparkMap[game.winner].write(NotificationService.generate('You Won! your leaderboard ranking has been updated', 'leaderboard.view', 'view'));
+                sparkMap[loser].write(NotificationService.generate('You Lost! your leaderboard ranking has been updated', 'leaderboard.view', 'view'));
                 primus.write({
                   action: 'persist.leaderboard',
                   payload: await UserService.getLeaderboard(),
+                });
+                primus.write({
+                  action: 'persist.games',
+                  payload: await GameService.getView(),
                 });
               } else {
                 spark.write(NotificationService.generate(`you can't confirm the result while the other play is offline!`));
@@ -504,10 +506,10 @@ primus.on('connection', async (spark) => {
             const otherPlayer = challenger === user.id ? opponent : opponent === user.id ? challenger : null;
             if (otherPlayer) {
               if (sparkMap[otherPlayer]) {
-                game = await GameService.update(payload.id, {played: true, contested: true, inProgress: false});
+                game = await GameService.update(payload.id, {played: true, contested: true, inProgress: false, waitingForConfirmationFrom: ''});
                 sparkMap[otherPlayer].write({
                   action: 'persist.playing',
-                  payload: game,
+                  payload: {},
                 });
                 sparkMap[otherPlayer].write({
                   action: 'display.togglePlayDialog',
@@ -515,7 +517,14 @@ primus.on('connection', async (spark) => {
                 });
                 spark.write({
                   action: 'persist.playing',
-                  payload: game,
+                  payload: {},
+                });
+                const notification = NotificationService.generate('Result was contested! game will have no ranking effect and is now hidden');
+                sparkMap[otherPlayer].write(notification);
+                spark.write(notification);
+                primus.write({
+                  action: 'persist.games',
+                  payload: await GameService.getView(),
                 });
               } else {
                 spark.write(NotificationService.generate(`you can't contest the result while the other play is offline!`));

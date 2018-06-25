@@ -1,8 +1,8 @@
 class NotificationService {
-  static generate(text, action = '') {
+  static generate(text, action = '', actionText = '') {
     return {
       action: 'notify.generic',
-      payload: {text, action},
+      payload: {text, action, actionText},
     };
   }
 }
