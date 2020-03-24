@@ -2,7 +2,7 @@
 // Require all dependencies.
 //
 import express from 'express';
-
+import path from 'path';
 import expressSession from 'express-session';
 import redis from 'redis';
 import mongoose from 'mongoose';
@@ -131,7 +131,7 @@ app.get('/', (req, res) => {
   // timestamp.
   //
   req.session.timestamp = Date.now();
-  res.sendFile(`${__dirname}/index.html`);
+  res.sendFile(`${path.resolve()}/index.html`);
 });
 
 app.get('/logout', (req, res) => {
