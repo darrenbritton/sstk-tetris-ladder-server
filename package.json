@@ -4,7 +4,7 @@
   "description": "server for sstk-tetris",
   "main": "index.js",
   "engines": {
-    "node": "10.5.0"
+    "node": "15.8.0"
   },
   "scripts": {
     "start": "node --experimental-modules index.mjs",
@@ -25,33 +25,33 @@
   },
   "homepage": "https://github.com/darrenbritton/sstk-tetris-lader-server#readme",
   "dependencies": {
-    "connect-redis": "^3.3.3",
-    "cookie-parser": "^1.0.1",
-    "delay": "^3.0.0",
-    "elo-rank": "^1.0.3",
-    "express": "^4.1.1",
-    "express-session": "^1.0.4",
-    "jsonfile": "^4.0.0",
-    "mongoose": "5.0.15",
-    "passport": "^0.4.0",
-    "passport-google-oauth20": "^1.0.0",
-    "primus": "^7.2.0",
-    "redis": "^2.8.0",
-    "timeout-then": "^1.1.0",
-    "uuid": "^3.2.1",
-    "ws": "^5.1.1"
+    "connect-redis": "^5.1.0",
+    "cookie-parser": "^1.4.5",
+    "delay": "^5.0.0",
+    "elo-rank": "^1.0.4",
+    "express": "^4.17.1",
+    "express-session": "^1.17.1",
+    "jsonfile": "^6.1.0",
+    "mongoose": "5.11.15",
+    "passport": "^0.4.1",
+    "passport-google-oauth20": "^2.0.0",
+    "primus": "^8.0.1",
+    "redis": "^3.0.2",
+    "timeout-then": "^2.0.0",
+    "uuid": "^8.3.2",
+    "ws": "^7.4.3"
   },
   "devDependencies": {
-    "@babel/core": "^7.0.0-beta.49",
-    "@babel/node": "^7.0.0-beta.49",
+    "@babel/core": "^7.12.13",
+    "@babel/node": "^7.12.13",
     "babel-plugin-transform-object-rest-spread": "^6.26.0",
     "babel-preset-env": "^1.7.0",
-    "chai": "^4.1.2",
-    "eslint": "^4.19.1",
-    "eslint-config-airbnb-base": "^12.1.0",
-    "eslint-config-google": "^0.9.1",
-    "eslint-plugin-import": "^2.12.0",
-    "mocha": "^5.2.0",
-    "nodemon": "^1.17.4"
+    "chai": "^4.3.0",
+    "eslint": "^7.19.0",
+    "eslint-config-airbnb-base": "^14.2.1",
+    "eslint-config-google": "^0.14.0",
+    "eslint-plugin-import": "^2.22.1",
+    "mocha": "^8.2.1",
+    "nodemon": "^2.0.7"
   }
 }
