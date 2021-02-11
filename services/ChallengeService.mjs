@@ -1,6 +1,5 @@
 import Challenge from '../models/Challenge.mjs';
 import UserService from './UserService.mjs';
-import User from '../models/User';
 
 class ChallengeService {
   static async create(obj) {
