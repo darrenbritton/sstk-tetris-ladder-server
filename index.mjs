@@ -11,7 +11,7 @@ const RedisStore = redisStoreFactory(expressSession);
 import cookieParser from 'cookie-parser';
 import http from 'http';
 import Primus from 'primus';
-import primusSession from './session';
+import primusSession from './session.js';
 import passport from 'passport';
 import GoogleStrategy from 'passport-google-oauth20';
 import jsonfile from 'jsonfile';
