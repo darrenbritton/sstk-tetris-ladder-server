@@ -1,4 +1,4 @@
-FROM node:10.5-alpine
+FROM node
 
 WORKDIR /app
 
@@ -9,7 +9,7 @@ ADD . .
 RUN chown -R node:node /app
 USER node
 
-RUN yarn install
+RUN yarn --ignore-engines install
 
 EXPOSE 8080
 CMD [ "yarn", "start" ]
