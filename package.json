@@ -36,7 +36,7 @@
     "passport": "^0.4.1",
     "passport-google-oauth20": "^2.0.0",
     "primus": "^8.0.1",
-    "redis": "^3.0.2",
+    "redis": "^3.1.1",
     "timeout-then": "^2.0.0",
     "uuid": "^8.3.2",
     "ws": "^7.4.3"
