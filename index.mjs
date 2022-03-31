@@ -61,7 +61,7 @@ const port = process.env.PORT || 8080;
 //
 // Connect to MongoDb
 //
-mongoose.connect(mongoUri, {poolSize: 10});
+mongoose.connect(mongoUri);
 
 //
 // Create an Express application.
