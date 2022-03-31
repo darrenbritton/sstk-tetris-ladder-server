@@ -76,7 +76,7 @@ const secret = Secrets.appSecret || Math.random().toString(36);
 const cookies = cookieParser(secret);
 
 /* redis */
-const redisUrl = process.env.REDIS_TLS_URL;
+const redisUrl = process.env.REDISCLOUD_URL || process.env.REDIS_TLS_URL;
 const redisConfig = { legacyMode: true };
 if (redisUrl) {
   redisConfig.url = redisUrl;
