@@ -80,6 +80,9 @@ const redisUrl = process.env.REDIS_TLS_URL;
 const redisConfig = { legacyMode: true };
 if (redisUrl) {
   redisConfig.url = redisUrl;
+} else if (process.env.REDIS_HOST) {
+  redisConfig.socket = {};
+  redisConfig.socket.host = process.env.REDIS_HOST;
 }
 
 const redisClient = redis.createClient(redisConfig);
