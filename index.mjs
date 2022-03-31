@@ -40,7 +40,7 @@ import NotificationService from './services/NotificationService.mjs';
 passport.use(new GoogleStrategy({
   clientID: Secrets.google.id,
   clientSecret: Secrets.google.secret,
-  callbackURL: '/auth/google/callback',
+  callbackURL: 'https://sstk-tetris-ladder.herokuapp.com/auth/google/callback',
 }, async (accessToken, refreshToken, profile, done) => {
     const user = await UserService.find(profile.id);
     if (user === null) {
