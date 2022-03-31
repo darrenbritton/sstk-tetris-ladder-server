@@ -78,7 +78,7 @@ const cookies = cookieParser(secret);
 /* redis */
 const rHost = process.env.REDIS_URL || process.env.REDIS_HOST || '127.0.0.1';
 const rPort = 6379;
-const client = process.env.REDIS_URL ? redis.createClient(rHost) : redis.createClient(rPort, rHost);
+const client = process.env.REDIS_TLS_URL ? redis.createClient(rHost) : redis.createClient(rPort, rHost);
 const store = new RedisStore({
   client,
   ttl: 15768000,
