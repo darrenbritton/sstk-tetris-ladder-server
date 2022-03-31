@@ -22,6 +22,8 @@ services:
     command: ["redis-server", "--appendonly", "yes"]
     volumes:
       - ./redis-data:/data
+    ports:
+      - "6379:6379"
   mongo:
     image: "mongo"
     ports:

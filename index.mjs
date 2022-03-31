@@ -76,17 +76,26 @@ const secret = Secrets.appSecret || Math.random().toString(36);
 const cookies = cookieParser(secret);
 
 /* redis */
-const rHost = process.env.REDIS_URL || process.env.REDIS_HOST || '127.0.0.1';
-const rPort = 6379;
-const client = process.env.REDIS_TLS_URL ? redis.createClient(rHost) : redis.createClient(rPort, rHost);
+const redisUrl = process.env.REDIS_TLS_URL;
+const redisConfig = { legacyMode: true };
+if (redisUrl) {
+  redisConfig.url = redisUrl;
+}
+
+const redisClient = redis.createClient(redisConfig);
+
+redisClient.on('error', (err) => console.log('Redis Client Error', err));
+
+redisClient.on('connect', () => {
+  console.log(`redis connected`);
+});
+
+redisClient.connect().catch(console.error);
 const store = new RedisStore({
-  client,
+  client: redisClient,
   ttl: 15768000,
 });
 
-client.on('connect', () => {
-  console.log(`redis connected - ${rHost}:${rPort}`);
-});
 
 //
 // Add the middleware needed for session support.
