@@ -29,17 +29,17 @@
     "cookie-parser": "^1.4.6",
     "delay": "^5.0.0",
     "elo-rank": "^1.0.4",
-    "express": "^4.17.3",
+    "express": "^4.20.0",
     "express-session": "^1.17.2",
     "jsonfile": "^6.1.0",
-    "mongoose": "6.2.9",
-    "passport": "^0.5.2",
+    "mongoose": "6.13.6",
+    "passport": "^0.6.0",
     "passport-google-oauth20": "^2.0.0",
     "primus": "^8.0.5",
     "redis": "^4.0.6",
     "timeout-then": "^2.0.0",
     "uuid": "^8.3.2",
-    "ws": "^8.5.0"
+    "ws": "^8.17.1"
   },
   "devDependencies": {
     "@babel/core": "^7.17.8",
